@@ -60,11 +60,13 @@ void Error_Handler(void);
 #define LIGHT_SENSOR_Pin GPIO_PIN_5
 #define LIGHT_SENSOR_GPIO_Port GPIOE
 #define LIGHT_SENSOR_EXTI_IRQn EXTI9_5_IRQn
-#define PXX7_Pin GPIO_PIN_6
-#define PXX7_GPIO_Port GPIOE
-#define PXX7_EXTI_IRQn EXTI9_5_IRQn
+#define PXX1_Pin GPIO_PIN_6
+#define PXX1_GPIO_Port GPIOE
+#define PXX1_EXTI_IRQn EXTI9_5_IRQn
 #define DEBUG_LED_Pin GPIO_PIN_13
 #define DEBUG_LED_GPIO_Port GPIOC
+#define PXX5_Pin GPIO_PIN_1
+#define PXX5_GPIO_Port GPIOA
 #define READ_EN_Pin GPIO_PIN_12
 #define READ_EN_GPIO_Port GPIOD
 #define WRITE_EN_Pin GPIO_PIN_9

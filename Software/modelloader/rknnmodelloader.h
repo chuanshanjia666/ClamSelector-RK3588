@@ -31,12 +31,25 @@ protected:
     bool do_inference(const uint8_t *input_data, std::vector<float> &output) override;
     bool do_inference_debug(const uint8_t *input_data, std::vector<float> &output) override;
     // 模型输入属性
-    bool update_model_input_attr();
-
+    bool update_model_io_attr();
+    void dequantize_output(std::vector<float> &output, int output_index);
     rknn_context ctx = 0;
+
+    // 输入属性
     int input_width = 0;
     int input_height = 0;
     int input_channels = 0;
     int input_image_size = 0;
     rknn_tensor_format input_fmt = RKNN_TENSOR_NHWC;
+    rknn_tensor_type input_type = RKNN_TENSOR_UINT8;
+    rknn_tensor_qnt_type input_qnt_type = RKNN_TENSOR_QNT_NONE;
+    float input_scale = 1.0f;
+    int input_zp = 0;
+
+    // 输出属性
+    int output_num = 0;
+    std::vector<rknn_tensor_attr> output_attrs;
+
+    // IO数量
+    rknn_input_output_num io_num;
 };

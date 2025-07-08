@@ -38,20 +38,31 @@ bool RKNNModelLoader::load_model(const std::string &modelPath)
     }
     this->modelPath = modelPath;
     std::cout << "[RKNN] Model loaded successfully: " << modelPath << std::endl;
-    return update_model_input_attr();
+    return update_model_io_attr();
 }
 
-bool RKNNModelLoader::update_model_input_attr()
+bool RKNNModelLoader::update_model_io_attr()
 {
+    // 查询IO数量
+    int ret = rknn_query(ctx, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
+    if (ret < 0)
+    {
+        std::cerr << "[RKNN] rknn_query input/output num failed: " << ret << std::endl;
+        return false;
+    }
+
+    // 查询输入属性
     rknn_tensor_attr input_attr;
     memset(&input_attr, 0, sizeof(input_attr));
     input_attr.index = 0;
-    int ret = rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &input_attr, sizeof(input_attr));
+    ret = rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &input_attr, sizeof(input_attr));
     if (ret < 0)
     {
         std::cerr << "[RKNN] rknn_query input attr failed: " << ret << std::endl;
         return false;
     }
+
+    // 保存输入属性
     input_fmt = input_attr.fmt;
     if (input_fmt == RKNN_TENSOR_NCHW)
     {
@@ -66,8 +77,30 @@ bool RKNNModelLoader::update_model_input_attr()
         input_channels = input_attr.dims[3];
     }
     input_image_size = input_width * input_height * input_channels;
+    input_type = input_attr.type;
+    input_qnt_type = input_attr.qnt_type;
+    input_scale = input_attr.scale;
+    input_zp = input_attr.zp;
+
+    // 查询并保存输出属性
+    output_num = io_num.n_output;
+    output_attrs.resize(output_num);
+    for (int i = 0; i < output_num; ++i)
+    {
+        memset(&output_attrs[i], 0, sizeof(rknn_tensor_attr));
+        output_attrs[i].index = i;
+        ret = rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &output_attrs[i], sizeof(rknn_tensor_attr));
+        if (ret < 0)
+        {
+            std::cerr << "[RKNN] rknn_query output attr failed for output " << i << ": " << ret << std::endl;
+            return false;
+        }
+    }
+
     std::cout << "[RKNN] Model input attr: width=" << input_width << ", height=" << input_height
-              << ", channels=" << input_channels << ", fmt=" << (input_fmt == RKNN_TENSOR_NCHW ? "NCHW" : "NHWC") << std::endl;
+              << ", channels=" << input_channels << ", fmt=" << (input_fmt == RKNN_TENSOR_NCHW ? "NCHW" : "NHWC")
+              << ", type=" << input_type << ", qnt_type=" << input_qnt_type
+              << ", scale=" << input_scale << ", zp=" << input_zp << std::endl;
     return true;
 }
 
@@ -134,70 +167,93 @@ void RKNNModelLoader::avframe_to_gray_buffer(const AVFrame *frame, int width, in
 
 bool RKNNModelLoader::do_inference_debug(const uint8_t *input_data, std::vector<float> &output)
 {
-    std::cout << "\n[DEBUG] Input tensor values (first 100 elements):\n";
-    for (int i = 0; i < std::min(100, input_image_size); ++i)
-    {
-        printf("%3u ", input_data[i]);
-        if ((i + 1) % 16 == 0)
-            printf("\n");
-    }
-    printf("\n");
+    // // 打印输入数据
+    // std::cout << "\n[DEBUG] Input tensor values (first 100 elements):\n";
+    // for (int i = 0; i < std::min(100, input_image_size); ++i)
+    // {
+    //     printf("%3u ", input_data[i]);
+    //     if ((i + 1) % 16 == 0)
+    //         printf("\n");
+    // }
+    // printf("\n");
 
-    std::cout << "[RKNN] do_inference: image_size=" << input_image_size << ", fmt=" << (input_fmt == RKNN_TENSOR_NCHW ? "NCHW" : "NHWC") << std::endl;
+    std::cout << "[RKNN] do_inference_debug:\n"
+              << "  image_size=" << input_image_size << "\n"
+              << "  fmt=" << (input_fmt == RKNN_TENSOR_NCHW ? "NCHW" : "NHWC") << "\n"
+              << "  input_type=" << input_type << "\n"
+              << "  qnt_type=" << input_qnt_type << "\n"
+              << "  scale=" << input_scale << "\n"
+              << "  zp=" << input_zp << std::endl;
+
+    // 设置输入(使用成员变量)
     rknn_input rknn_in;
     memset(&rknn_in, 0, sizeof(rknn_in));
     rknn_in.index = 0;
     rknn_in.buf = (void *)input_data;
     rknn_in.size = input_image_size;
-    rknn_in.pass_through = 0;
-    rknn_in.type = RKNN_TENSOR_UINT8;
-    rknn_in.fmt = input_fmt;
+    rknn_in.pass_through = 0;  // 启用自动量化处理
+    rknn_in.type = input_type; // 使用成员变量
+    rknn_in.fmt = input_fmt;   // 使用成员变量
+
+    // 设置输入
     int ret = rknn_inputs_set(ctx, 1, &rknn_in);
-    if (ret != 0)
+    if (ret != RKNN_SUCC)
     {
         std::cerr << "[RKNN] rknn_inputs_set failed: " << ret << std::endl;
         return false;
     }
     std::cout << "[RKNN] rknn_inputs_set success." << std::endl;
+
+    // 执行推理
     ret = rknn_run(ctx, nullptr);
-    if (ret != 0)
+    if (ret != RKNN_SUCC)
     {
         std::cerr << "[RKNN] rknn_run failed: " << ret << std::endl;
         return false;
     }
     std::cout << "[RKNN] rknn_run success." << std::endl;
-    rknn_input_output_num io_num;
-    ret = rknn_query(ctx, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
-    if (ret < 0)
-    {
-        std::cerr << "[RKNN] rknn_query input/output num failed: " << ret << std::endl;
-        return false;
-    }
-    std::cout << "[RKNN] Model output num: " << io_num.n_output << std::endl;
+
+    // 准备输出缓冲区(使用成员变量io_num)
     std::vector<rknn_output> outputs(io_num.n_output);
-    for (int i = 0; i < static_cast<int>(io_num.n_output); ++i)
+    for (int i = 0; i < io_num.n_output; ++i)
     {
         outputs[i].index = i;
-        outputs[i].want_float = 1;
-        outputs[i].is_prealloc = 0;
-        outputs[i].buf = nullptr;
-        outputs[i].size = 0;
+        outputs[i].want_float = 1; // 直接获取浮点输出
     }
+
+    // 获取输出
     ret = rknn_outputs_get(ctx, io_num.n_output, outputs.data(), nullptr);
-    if (ret != 0)
+    if (ret != RKNN_SUCC)
     {
         std::cerr << "[RKNN] rknn_outputs_get failed: " << ret << std::endl;
         return false;
     }
     std::cout << "[RKNN] rknn_outputs_get success." << std::endl;
+
+    // [7] 处理第一个输出
     if (outputs[0].buf && outputs[0].size > 0)
     {
-        float *out_ptr = static_cast<float *>(outputs[0].buf);
-        output.assign(out_ptr, out_ptr + outputs[0].size / sizeof(float));
-        std::cout << "[RKNN] Output[0] size: " << outputs[0].size << ", float count: " << outputs[0].size / sizeof(float) << std::endl;
+        float *raw_output = static_cast<float *>(outputs[0].buf);
+        output.assign(raw_output, raw_output + outputs[0].size / sizeof(float));
+
+        // [8] 调用成员函数进行反量化
+        dequantize_output(output, 0); // 对第0个输出进行反量化
+
+        // [9] 调试打印
+        std::cout << "[RKNN] Output details:\n"
+                  << "  Size: " << outputs[0].size << " bytes\n"
+                  << "  Values (first 5): ";
+        for (int i = 0; i < std::min(5, (int)output.size()); ++i)
+        {
+            printf("%.6f ", output[i]);
+        }
+        printf("\n");
     }
+
+    // 释放输出
     rknn_outputs_release(ctx, io_num.n_output, outputs.data());
     std::cout << "[RKNN] rknn_outputs_release done." << std::endl;
+
     return true;
 }
 
@@ -330,4 +386,23 @@ void RKNNModelLoader::show_model_inf()
         }
     }
     std::cout << "===============================" << std::endl;
+}
+
+void RKNNModelLoader::dequantize_output(std::vector<float> &output, int output_index)
+{
+    if (output_index < 0 || output_index >= output_num)
+    {
+        std::cerr << "[RKNN] Invalid output index for dequantization: " << output_index << std::endl;
+        return;
+    }
+
+    const auto &attr = output_attrs[output_index];
+    if (attr.qnt_type != RKNN_TENSOR_QNT_NONE)
+    {
+        float scale = attr.scale;
+        for (auto &val : output)
+        {
+            val *= scale;
+        }
+    }
 }
