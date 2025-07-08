@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type":"shell",
+			"label": "build",
+			"command": "make",
+			"dependsOn": "Create BUILD-DIR",
+			"args": [
+                "all",
+				"-j10"
+			],
+			"detail": "build project"
+		},
+		{
+			"type": "shell",
+			"label": "upload",
+			"command": "make",
+			"args": [
+                "upload"
+			],
+			"detail": "Upload project"
+		},
+		{
+			"type": "shell",
+			"label": "all",
+			"command": "make",
+			"args": [
+                "all",
+				"-j10"
+			],
+			"detail": "make all"
+		}
+		
+	]
+}
