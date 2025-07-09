@@ -64,11 +64,17 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(INTB_GPIO_Port, INTB_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : LIGHT_SENSOR_Pin PXX1_Pin */
-  GPIO_InitStruct.Pin = LIGHT_SENSOR_Pin|PXX1_Pin;
+  /*Configure GPIO pin : LIGHT_SENSOR_Pin */
+  GPIO_InitStruct.Pin = LIGHT_SENSOR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  HAL_GPIO_Init(LIGHT_SENSOR_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PXX1_Pin */
+  GPIO_InitStruct.Pin = PXX1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(PXX1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : DEBUG_LED_Pin */
   GPIO_InitStruct.Pin = DEBUG_LED_Pin;
@@ -79,7 +85,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PXX5_Pin */
   GPIO_InitStruct.Pin = PXX5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(PXX5_GPIO_Port, &GPIO_InitStruct);
 
@@ -106,13 +112,13 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PXX6_Pin */
   GPIO_InitStruct.Pin = PXX6_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(PXX6_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PXX2_Pin PXX3_Pin PXX4_Pin */
   GPIO_InitStruct.Pin = PXX2_Pin|PXX3_Pin|PXX4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 

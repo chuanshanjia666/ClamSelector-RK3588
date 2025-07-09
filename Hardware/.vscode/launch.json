@@ -17,7 +17,7 @@
             "setupCommands": [
                 {
                     "description": "选择调试文件(.elf)到gdb",
-                    "text": "file F:/STM32/main/build/main.elf",
+                    "text": "file F:/ClamSelector-RK3588/Hardware/build/main.elf",
                     "ignoreFailures": false
                 },
                 {

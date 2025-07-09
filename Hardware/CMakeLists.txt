@@ -52,6 +52,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     ${CMAKE_SOURCE_DIR}/lib/src/dc_motor.c
     ${CMAKE_SOURCE_DIR}/lib/src/rs485.c
+    ${CMAKE_SOURCE_DIR}/lib/src/stepmotor.c
 )
 
 # Add include paths

@@ -1,27 +1,26 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    can.c
-  * @brief   This file provides code for the configuration
-  *          of the CAN instances.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    can.c
+ * @brief   This file provides code for the configuration
+ *          of the CAN instances.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan1;
@@ -124,6 +123,12 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     /* CAN1 interrupt Init */
     HAL_NVIC_SetPriority(CAN1_TX_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
+    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
+    HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_SCE_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
   /* USER CODE END CAN1_MspInit 1 */
@@ -155,6 +160,12 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     /* CAN2 interrupt Init */
     HAL_NVIC_SetPriority(CAN2_TX_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(CAN2_TX_IRQn);
+    HAL_NVIC_SetPriority(CAN2_RX0_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN2_RX0_IRQn);
+    HAL_NVIC_SetPriority(CAN2_RX1_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN2_RX1_IRQn);
+    HAL_NVIC_SetPriority(CAN2_SCE_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN2_SCE_IRQn);
   /* USER CODE BEGIN CAN2_MspInit 1 */
 
   /* USER CODE END CAN2_MspInit 1 */
@@ -183,6 +194,9 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 
     /* CAN1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(CAN1_TX_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_RX1_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_SCE_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
   /* USER CODE END CAN1_MspDeInit 1 */
@@ -207,6 +221,9 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 
     /* CAN2 interrupt Deinit */
     HAL_NVIC_DisableIRQ(CAN2_TX_IRQn);
+    HAL_NVIC_DisableIRQ(CAN2_RX0_IRQn);
+    HAL_NVIC_DisableIRQ(CAN2_RX1_IRQn);
+    HAL_NVIC_DisableIRQ(CAN2_SCE_IRQn);
   /* USER CODE BEGIN CAN2_MspDeInit 1 */
 
   /* USER CODE END CAN2_MspDeInit 1 */
@@ -214,5 +231,85 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
+HAL_StatusTypeDef can2_send_msg(uint32_t id, uint8_t type, uint8_t len, uint8_t *msg)
+{
+  CAN_TxHeaderTypeDef g_can2_txheader; /* 发送参数句柄 */
+  uint16_t t = 0;
+  uint32_t TxMailbox = CAN_TX_MAILBOX0;
+
+  g_can2_txheader.StdId = id;       /* 标准标识符 */
+  g_can2_txheader.IDE = CAN_ID_STD; /* 使用标准帧 */
+  g_can2_txheader.RTR = type;       /* 数据帧 */
+  g_can2_txheader.DLC = len;
+
+  while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan2) < 1)
+    ; /* 等待发送邮箱有空闲 */
+
+  if (HAL_CAN_AddTxMessage(&hcan2, &g_can2_txheader, msg, &TxMailbox) != HAL_OK) /* 发送消息 */
+  {
+    return HAL_ERROR;
+  }
+  while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan2) != 3) /* 等待发送完成,所有邮箱为空 */
+  {
+    t++;
+
+    if (t > 0xFFF)
+    {
+      HAL_CAN_AbortTxRequest(&hcan2, TxMailbox); /* 超时，直接中止邮箱的发送请求 */
+      return HAL_TIMEOUT;                        /* 超时 */
+    }
+  }
+
+  return HAL_OK;
+}
+
+HAL_StatusTypeDef can2_receive_msg(uint32_t id, uint8_t FIFO_id, uint8_t type, uint8_t *buf)
+{
+  CAN_RxHeaderTypeDef g_can2_rxheader;                  /* 接收参数句柄 */
+  if (HAL_CAN_GetRxFifoFillLevel(&hcan2, FIFO_id) == 0) /* 没有接收到数据 */
+  {
+    return HAL_ERROR;
+  }
+  if (HAL_CAN_GetRxMessage(&hcan2, FIFO_id, &g_can2_rxheader, buf) != HAL_OK) /* 读取数据 */
+  {
+    return HAL_ERROR;
+  }
+  if (g_can2_rxheader.StdId != id || g_can2_rxheader.IDE != CAN_ID_STD || g_can2_rxheader.RTR != type) /* 接收到的ID不对 / 不是标准帧 / 不是type类型 （软件筛选）*/
+  {
+    return HAL_ERROR;
+  }
+  return g_can2_rxheader.DLC;
+}
+
+HAL_StatusTypeDef setCANxFilter(CAN_HandleTypeDef hcan, CAN_FilterTypeDef *userFilter)
+{
+  CAN_FilterTypeDef sFilterConfig;
+  sFilterConfig.FilterBank = userFilter->FilterBank; /* 过滤器ID */
+  sFilterConfig.FilterMode = userFilter->FilterMode;
+  sFilterConfig.FilterScale = userFilter->FilterScale;
+  sFilterConfig.FilterIdHigh = userFilter->FilterIdHigh; /* 32位ID */
+  sFilterConfig.FilterIdLow = userFilter->FilterIdLow;
+  sFilterConfig.FilterMaskIdHigh = userFilter->FilterMaskIdHigh; /* 32位MASK */
+  sFilterConfig.FilterMaskIdLow = userFilter->FilterMaskIdLow;
+  sFilterConfig.FilterFIFOAssignment = userFilter->FilterFIFOAssignment; /* 过滤器关联到FIFO0 */
+  sFilterConfig.FilterActivation = userFilter->FilterActivation;         /* 激活滤波器 */
+#ifndef IS_SET_SALVE_START_FILTER_BANK
+#define IS_SET_SALVE_START_FILTER_BANK
+  sFilterConfig.SlaveStartFilterBank = 0; /* 从0开始的从属滤波器 */
+#endif
+  if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+  return HAL_OK;
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+}
+
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+}
 
 /* USER CODE END 1 */
