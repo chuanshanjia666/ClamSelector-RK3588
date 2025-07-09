@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(main VERSION 0.1 LANGUAGES CXX)
+option(USE_RKNN "Enable RKNN backend" ON)
+option(USE_TENSORRT "Enable TensorRT backend" OFF)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -64,7 +66,8 @@ endif()
 
 add_subdirectory(scaler)
 add_subdirectory(decoder)
-
+add_subdirectory(modelloader)
+add_subdirectory(communication)
 # 查找 Qt5
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
 
@@ -74,6 +77,9 @@ add_executable(main
     decodethread.cpp
     decodethread.h
     mainwindow.cpp
+    serialworker.cpp
+    inferencethread.cpp
+    inferencethread.h
     mainwindow.h
     mainwindow.ui
     resources.qrc
@@ -89,6 +95,7 @@ target_link_libraries(main PRIVATE
     
     scaler
     decoder
-
+    modelloader
+    communication
 )
 

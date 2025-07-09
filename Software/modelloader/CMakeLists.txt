@@ -1,5 +1,3 @@
-option(USE_RKNN "Enable RKNN backend" ON)
-option(USE_TENSORRT "Enable TensorRT backend" OFF)
 
 set(MODELLODER_SRC
     basemodelloader.cpp
@@ -22,5 +20,5 @@ endif()
 
 add_library(modelloader STATIC ${MODELLODER_SRC})
 
-target_include_directories(modelloder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${MODELLODER_INCLUDE_DIR})
-target_link_libraries(modelloder PUBLIC ${MODELLODER_LINK_LIBS})
+target_include_directories(modelloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${MODELLODER_INCLUDE_DIR})
+target_link_libraries(modelloader PUBLIC ${MODELLODER_LINK_LIBS})

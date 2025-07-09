@@ -26,13 +26,14 @@ protected:
     static bool check_frame_format_gray(const AVFrame *frame);
     void avframe_to_rgb_buffer(const AVFrame *frame, int width, int height, int channels, std::vector<uint8_t> &out);
     void avframe_to_gray_buffer(const AVFrame *frame, int width, int height, std::vector<uint8_t> &out);
-
+    void avframe_to_rgb_buffer(const AVFrame *frame, int width, int height, int channels, std::vector<int16_t> &out);
     // 内部推理
     bool do_inference(const uint8_t *input_data, std::vector<float> &output) override;
     bool do_inference_debug(const uint8_t *input_data, std::vector<float> &output) override;
     // 模型输入属性
     bool update_model_io_attr();
     void dequantize_output(std::vector<float> &output, int output_index);
+    bool get_and_dequantize_output(std::vector<float> &output);
     rknn_context ctx = 0;
 
     // 输入属性

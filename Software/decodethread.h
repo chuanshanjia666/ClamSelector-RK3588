@@ -5,6 +5,12 @@
 #include <QImage>
 #include "decoder.h"
 #include "basescaler.h"
+
+extern "C"
+{
+#include <libavutil/frame.h>
+}
+
 class DecodeThread : public QThread
 {
     Q_OBJECT
@@ -16,7 +22,10 @@ public:
     void stopDecode();
 
 signals:
-    void frameDecoded(const QImage &image);
+    // 发送解码后的AVFrame给推理线程
+    void frameDecoded(AVFrame *frame);
+    // 发送QImage给显示线程（可选）
+    void frameDecodedForDisplay(const QImage &image);
     void decodingFinished();
 
 protected:

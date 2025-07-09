@@ -57,12 +57,12 @@ HAL_StatusTypeDef StepMotor_Init(void)
     StepMotor_id_3.speed_h = 0x00;             // Initial speed high byte
     StepMotor_id_3.speed_l = 0x64;             // Initial speed low byte
 
-    if (can_ctrl_stepmotor(&StepMotor_id_1) ||
-        can_ctrl_stepmotor(&StepMotor_id_2) ||
-        can_ctrl_stepmotor(&StepMotor_id_3) == HAL_ERROR)
-    {
-        return HAL_ERROR; // Return error if any motor initialization fails
-    }
+    // if (can_ctrl_stepmotor(&StepMotor_id_1) ||
+    //     can_ctrl_stepmotor(&StepMotor_id_2) ||
+    //     can_ctrl_stepmotor(&StepMotor_id_3) == HAL_ERROR)
+    // {
+    //     return HAL_ERROR; // Return error if any motor initialization fails
+    // }
     printf("Step motors initialized successfully\n"); // Print success message
     return HAL_OK;                                    // Return success status
 }

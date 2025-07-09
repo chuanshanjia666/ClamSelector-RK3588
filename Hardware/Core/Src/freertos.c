@@ -56,11 +56,11 @@ Button_TypeDef buttons[] = {
     {PXX6_GPIO_Port, PXX6_Pin, 50, 1, 1, 6, 0}};
 const char *cmd[] =
     {
-        "start ",
-        "class1",
-        "class2",
-        "class3",
-        "class4",
+        "start \n",
+        "class1\n",
+        "class2\n",
+        "class3\n",
+        "class4\n",
 };
 /* USER CODE END PTD */
 
@@ -306,7 +306,8 @@ void StartDefaultTask(void *argument)
     buttons[i].last_state = buttons[i].stable_state;
     buttons[i].is_debouncing = 0;
   }
-
+  DC_Motor_SetSpeed(&h_dc_motor, 50); // Set initial speed to 0
+  DC_Motor_Start(&h_dc_motor); // Start the DC motor
   // 初始化TIM13为单次模式
   //  HAL_TIM_Base_Start(&htim13); // 先启动定时器但不开启中断
 
@@ -316,19 +317,35 @@ void StartDefaultTask(void *argument)
   osDelay(10);
   RS485_ReadOn(buff, sizeof(buff)); // Enable RS485 write and read
 
+
+
   osDelay(10);
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, buff, sizeof(buff));
 
-  if (HAL_CAN_Start(&hcan2) != HAL_OK)
-  {
-    /* Start Error */
-    printf("CAN2 Start Error\r\n");
-  }
-  else
-  {
-    /* Start Success */
-    printf("CAN2 Start Success\r\n");
-  }
+  // for (;;)
+  // {
+  //   for (int k = 0;k<100;k++)
+  //   {
+  //     DC_Motor_SetSpeed(&h_dc_motor, k);
+  //     osDelay(10); // Delay for 10 ms to allow speed change
+  //   }
+  //   for (int k = 100; k > 0;k--)
+  //   {
+  //     DC_Motor_SetSpeed(&h_dc_motor, k);
+  //     osDelay(10);
+  //   }
+  // }
+
+    if (HAL_CAN_Start(&hcan2) != HAL_OK)
+    {
+      /* Start Error */
+      printf("CAN2 Start Error\r\n");
+    }
+    else
+    {
+      /* Start Success */
+      printf("CAN2 Start Success\r\n");
+    }
   osDelay(100);
   StepMotor_Init();
   // DC_Motor_SetSpeed(&h_dc_motor, 300); // Set DC motor speed to 500
@@ -362,8 +379,13 @@ void STEP_MOTOR1fun(void *argument)
   for (;;)
   {
     uint32_t flags = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
-
+    StepMotor_id_1.dir = STEPMOTOR_DIRECTION_CW;
+    can_ctrl_stepmotor(&StepMotor_id_1);
+    
     flags = osThreadFlagsWait(0x02, osFlagsWaitAny, osWaitForever);
+    StepMotor_id_1.dir = STEPMOTOR_DIRECTION_CCW;
+    can_ctrl_stepmotor(&StepMotor_id_1);
+
   }
   /* USER CODE END STEP_MOTOR1fun */
 }

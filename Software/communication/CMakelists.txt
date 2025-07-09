@@ -1,6 +1,6 @@
 
 add_library(communication
-    src/communication.cpp
+    serialport.cpp
 )
 
 
