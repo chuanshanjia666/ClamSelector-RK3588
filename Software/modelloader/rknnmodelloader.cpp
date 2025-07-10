@@ -101,6 +101,7 @@ bool RKNNModelLoader::update_model_io_attr()
               << ", channels=" << input_channels << ", fmt=" << (input_fmt == RKNN_TENSOR_NCHW ? "NCHW" : "NHWC")
               << ", type=" << input_type << ", qnt_type=" << input_qnt_type
               << ", scale=" << input_scale << ", zp=" << input_zp << std::endl;
+    show_model_inf();
     return true;
 }
 

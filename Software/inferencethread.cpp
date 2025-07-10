@@ -109,8 +109,8 @@ void InferenceThread::run()
             auto maxIter = std::max_element(output.begin(), output.end());
             int classId = std::distance(output.begin(), maxIter);
             float confidence = *maxIter;
-
-            qDebug() << "[Inference] Predicted class:" << classId << ", confidence:" << confidence;
+            
+            // qDebug() << "[Inference] Predicted class:" << classId << ", confidence:" << confidence;
 
             emit inferenceResultReady(classId, confidence); // 发射新信号
         }
