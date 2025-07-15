@@ -40,7 +40,7 @@ void DecodeThread::run()
     // 1. 初始化硬件解码器
     if (!m_decoder.init(m_filename.toStdString(), "rkmpp", "h264_rkmpp"))
     {
-        qWarning() << "Failed to initialize decoder";
+        qWarning() << "Failed to initialize HWdecoder";
         emit decodingFinished();
         return;
     }

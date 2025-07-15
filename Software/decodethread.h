@@ -3,7 +3,7 @@
 
 #include <QThread>
 #include <QImage>
-#include "decoder.h"
+#include"hwdecoder.hpp"
 #include "basescaler.h"
 
 extern "C"
@@ -33,7 +33,7 @@ protected:
 
 private:
     BaseScaler *scaler = nullptr;
-    Decoder m_decoder;
+    HWDecoder m_decoder;
     QString m_filename;
     bool m_running = false;
 };

@@ -1,13 +1,7 @@
-# add_library(decoder STATIC
-# decoder.cpp
-# decoder.h
-
-# )
 add_library(decoder STATIC
     basedecoder.cpp
     swdecoder.cpp
     hwdecoder.cpp
-    decoder.cpp
 )
 
 

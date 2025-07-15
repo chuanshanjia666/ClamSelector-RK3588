@@ -32,8 +32,6 @@ protected:
     bool do_inference_debug(const uint8_t *input_data, std::vector<float> &output) override;
     // 模型输入属性
     bool update_model_io_attr();
-    void dequantize_output(std::vector<float> &output, int output_index);
-    bool get_and_dequantize_output(std::vector<float> &output);
     rknn_context ctx = 0;
 
     // 输入属性
