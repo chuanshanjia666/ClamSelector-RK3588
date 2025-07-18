@@ -3,7 +3,7 @@
 #include "tim.h"
 
 #define MAX_BUTTONS 6
-#define DEBOUNCE_TIME_MS 50 // 消抖时间50ms
+#define DEBOUNCE_TIME_MS 100 // 消抖时间50ms
 
 typedef enum
 {

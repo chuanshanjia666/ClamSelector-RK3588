@@ -38,6 +38,6 @@ extern StepMotor_TypeDef StepMotor_id_2;
 extern StepMotor_TypeDef StepMotor_id_3;
 
 HAL_StatusTypeDef can_ctrl_stepmotor(StepMotor_TypeDef *stepmotor);
-HAL_StatusTypeDef StepMotor_Init(void);
+void StepMotor_Init(CAN_HandleTypeDef *hcanx);
 
 #endif

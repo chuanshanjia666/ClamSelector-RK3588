@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include"botton_system.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,6 +103,7 @@ int main(void)
   MX_TIM3_Init();
   MX_CAN1_Init();
   MX_TIM13_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -200,9 +201,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  else
+  else if (htim->Instance == TIM13)
   {
-    MYHAL_TIM_PeriodElapsedCallback(htim);
+    Button_System_Timer_Callback();
   }
   /* USER CODE END Callback 1 */
 }

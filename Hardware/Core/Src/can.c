@@ -231,37 +231,6 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
-HAL_StatusTypeDef can2_send_msg(uint32_t id, uint8_t type, uint8_t len, uint8_t *msg)
-{
-  CAN_TxHeaderTypeDef g_can2_txheader; /* 发送参数句柄 */
-  uint16_t t = 0;
-  uint32_t TxMailbox = CAN_TX_MAILBOX0;
-
-  g_can2_txheader.StdId = id;       /* 标准标识符 */
-  g_can2_txheader.IDE = CAN_ID_STD; /* 使用标准帧 */
-  g_can2_txheader.RTR = type;       /* 数据帧 */
-  g_can2_txheader.DLC = len;
-
-  while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan2) < 1)
-    ; /* 等待发送邮箱有空闲 */
-
-  if (HAL_CAN_AddTxMessage(&hcan2, &g_can2_txheader, msg, &TxMailbox) != HAL_OK) /* 发送消息 */
-  {
-    return HAL_ERROR;
-  }
-  while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan2) != 3) /* 等待发送完成,所有邮箱为空 */
-  {
-    t++;
-
-    if (t > 0xFFF)
-    {
-      HAL_CAN_AbortTxRequest(&hcan2, TxMailbox); /* 超时，直接中止邮箱的发送请求 */
-      return HAL_TIMEOUT;                        /* 超时 */
-    }
-  }
-
-  return HAL_OK;
-}
 
 
 /* USER CODE END 1 */

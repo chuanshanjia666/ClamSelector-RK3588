@@ -67,6 +67,7 @@ void Error_Handler(void);
 #define DEBUG_LED_GPIO_Port GPIOC
 #define PXX5_Pin GPIO_PIN_1
 #define PXX5_GPIO_Port GPIOA
+#define PXX5_EXTI_IRQn EXTI1_IRQn
 #define READ_EN_Pin GPIO_PIN_12
 #define READ_EN_GPIO_Port GPIOD
 #define WRITE_EN_Pin GPIO_PIN_9
@@ -75,6 +76,9 @@ void Error_Handler(void);
 #define INTA_GPIO_Port GPIOA
 #define INTB_Pin GPIO_PIN_12
 #define INTB_GPIO_Port GPIOA
+#define BUTTON_TEST_Pin GPIO_PIN_15
+#define BUTTON_TEST_GPIO_Port GPIOA
+#define BUTTON_TEST_EXTI_IRQn EXTI15_10_IRQn
 #define PXX6_Pin GPIO_PIN_3
 #define PXX6_GPIO_Port GPIOD
 #define PXX6_EXTI_IRQn EXTI3_IRQn

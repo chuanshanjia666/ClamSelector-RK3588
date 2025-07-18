@@ -1,11 +1,44 @@
-#include "stepmotor.h"
-
+#include "step_motor.h"
+#include <stdio.h>
 StepMotor_TypeDef StepMotor_id_1;
 StepMotor_TypeDef StepMotor_id_2;
 StepMotor_TypeDef StepMotor_id_3;
+CAN_HandleTypeDef *stepmotor_can;
+static HAL_StatusTypeDef STEP_Motor_Send(uint32_t id, uint8_t type, uint8_t len, uint8_t *msg)
+{
+    CAN_TxHeaderTypeDef g_can2_txheader;
+    uint16_t t = 0;
+    uint32_t TxMailbox = CAN_TX_MAILBOX0;
+
+    g_can2_txheader.StdId = id;
+    g_can2_txheader.IDE = CAN_ID_STD;
+    g_can2_txheader.RTR = type;
+    g_can2_txheader.DLC = len;
+
+    while (HAL_CAN_GetTxMailboxesFreeLevel(stepmotor_can) < 1)
+        ; /* 等待发送邮箱有空闲 */
+
+    if (HAL_CAN_AddTxMessage(stepmotor_can, &g_can2_txheader, msg, &TxMailbox) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+    while (HAL_CAN_GetTxMailboxesFreeLevel(stepmotor_can) != 3)
+    {
+        t++;
+
+        if (t > 0xFFF)
+        {
+            HAL_CAN_AbortTxRequest(stepmotor_can, TxMailbox);
+            return HAL_TIMEOUT;
+        }
+    }
+
+    return HAL_OK;
+}
 
 HAL_StatusTypeDef can_ctrl_stepmotor(StepMotor_TypeDef *stepmotor)
 {
+
     uint8_t canbuf[7];
     HAL_StatusTypeDef res;
     canbuf[0] = stepmotor->mode;
@@ -15,20 +48,19 @@ HAL_StatusTypeDef can_ctrl_stepmotor(StepMotor_TypeDef *stepmotor)
     canbuf[4] = stepmotor->pos_l;
     canbuf[5] = stepmotor->speed_h;
     canbuf[6] = stepmotor->speed_l;
-    res = can2_send_msg(stepmotor->id, CAN_RTR_DATA, 7, canbuf); // Send CAN message
+
+    res = STEP_Motor_Send(stepmotor->id, CAN_RTR_DATA, 7, canbuf);
     if (res == HAL_ERROR)
     {
-        printf("CAN send error for motor ID %d\n", stepmotor->id); // Error handling
+        printf("CAN send error for motor ID %d\n", stepmotor->id);
     }
-    else
-    {
-        printf("CAN send success for motor ID %d\n", stepmotor->id); // Success message
-    }
+
     return res;
 }
 
-HAL_StatusTypeDef StepMotor_Init(void)
+void StepMotor_Init(CAN_HandleTypeDef *hcanx)
 {
+    stepmotor_can = hcanx; // Initialize the CAN handle for step motors
 
     StepMotor_id_1.id = STEPMOTOR_1;
     StepMotor_id_1.mode = STEPMOTOR_POSITION_MODE;
@@ -57,12 +89,5 @@ HAL_StatusTypeDef StepMotor_Init(void)
     StepMotor_id_3.speed_h = 0x00;             // Initial speed high byte
     StepMotor_id_3.speed_l = 0x64;             // Initial speed low byte
 
-    // if (can_ctrl_stepmotor(&StepMotor_id_1) ||
-    //     can_ctrl_stepmotor(&StepMotor_id_2) ||
-    //     can_ctrl_stepmotor(&StepMotor_id_3) == HAL_ERROR)
-    // {
-    //     return HAL_ERROR; // Return error if any motor initialization fails
-    // }
     printf("Step motors initialized successfully\n"); // Print success message
-    return HAL_OK;                                    // Return success status
 }

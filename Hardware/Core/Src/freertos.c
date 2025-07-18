@@ -30,8 +30,9 @@
 #include "dc_motor.h"
 #include "tim.h"
 #include "can.h"
-#include "stepmotor.h"
+#include "step_motor.h"
 #include "myqueue.h"
+#include "botton_system.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,51 +61,54 @@ const char *cmd[] =
         "class3\n"};
 uint8_t buff[40];
 
-DECLARE_QUEUE(step_motor1_queue, osTimerId_t, 8);
-DECLARE_QUEUE(step_motor2_queue, osTimerId_t, 8);
-DECLARE_QUEUE(step_motor3_queue, osTimerId_t, 8);
+DECLARE_QUEUE(step_motor1_queue, osTimerId_t, 8)
+DECLARE_QUEUE(step_motor2_queue, osTimerId_t, 8)
+DECLARE_QUEUE(step_motor3_queue, osTimerId_t, 8)
 
 /* USER CODE END Variables */
 /* Definitions for main_task */
 osThreadId_t main_taskHandle;
 const osThreadAttr_t main_task_attributes = {
-    .name = "main_task",
-    .stack_size = 512 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "main_task",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for step_motor1 */
 osThreadId_t step_motor1Handle;
 const osThreadAttr_t step_motor1_attributes = {
-    .name = "step_motor1",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityHigh,
+  .name = "step_motor1",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for step_motor2 */
 osThreadId_t step_motor2Handle;
 const osThreadAttr_t step_motor2_attributes = {
-    .name = "step_motor2",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityHigh,
+  .name = "step_motor2",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for step_motor3 */
 osThreadId_t step_motor3Handle;
 const osThreadAttr_t step_motor3_attributes = {
-    .name = "step_motor3",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityHigh,
+  .name = "step_motor3",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for step_motor1_queue_mutex */
 osMutexId_t step_motor1_queue_mutexHandle;
 const osMutexAttr_t step_motor1_queue_mutex_attributes = {
-    .name = "step_motor1_queue_mutex"};
+  .name = "step_motor1_queue_mutex"
+};
 /* Definitions for step_motor2_queue_mutex */
 osMutexId_t step_motor2_queue_mutexHandle;
 const osMutexAttr_t step_motor2_queue_mutex_attributes = {
-    .name = "step_motor2_queue_mutex"};
+  .name = "step_motor2_queue_mutex"
+};
 /* Definitions for step_motor3_queue_mutex */
 osMutexId_t step_motor3_queue_mutexHandle;
 const osMutexAttr_t step_motor3_queue_mutex_attributes = {
-    .name = "step_motor3_queue_mutex"};
+  .name = "step_motor3_queue_mutex"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -123,12 +127,17 @@ void step_motor3_timer_callback()
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == LIGHT_SEN_Pin)
+  if (GPIO_Pin == LIGHT_SENSOR_Pin)
   {
     timer_set_flag = 1;
     // HAL_UART_Transmit_IT(&huart1, cmd[0], 7);
     // printf("Tim start\r\n");
   }
+  else
+  {
+    Button_System_IRQ_Entry(GPIO_Pin);
+  }
+  
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
@@ -145,6 +154,17 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     }
   }
 }
+
+void PushCallBack(void)
+{
+  HAL_GPIO_TogglePin(DEBUG_LED_GPIO_Port, DEBUG_LED_Pin);
+}
+
+void ReleaseCallBack(void)
+{
+  HAL_GPIO_TogglePin(DEBUG_LED_GPIO_Port, DEBUG_LED_Pin);
+}
+
 /* USER CODE END FunctionPrototypes */
 
 void MainTask(void *argument);
@@ -172,12 +192,11 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 /* USER CODE END 4 */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
-void MX_FREERTOS_Init(void)
-{
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -227,6 +246,7 @@ void MX_FREERTOS_Init(void)
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_MainTask */
@@ -244,14 +264,18 @@ void MainTask(void *argument)
   step_motor3_queue_init();
 
   DC_Monitor_TypeDef hdc;
-  DC_Motor_Init(&hdc, &htim1, &htim4, TIM_CHANNEL_1, 100);
+  DC_Motor_Init(&hdc, &htim1, &htim3, TIM_CHANNEL_1, 100);
   DC_Motor_SetSpeed(&hdc, 10);
   DC_Motor_Start(&hdc);
   HAL_CAN_Start(&hcan1);
-  HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, buff, sizeof(buff));
   osDelay(1);
-  StepMotor_Init();
+  StepMotor_Init(&hcan2);
+  
+  Button_System_Init(&htim13);
+  Button_System_Add(BUTTON_TEST_GPIO_Port, BUTTON_TEST_Pin, GPIO_PIN_RESET, PushCallBack, ReleaseCallBack);
+
   osTimerId_t tim_id;
   /* Infinite loop */
   for (;;)
@@ -385,3 +409,4 @@ void step_motor3_task(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
