@@ -263,53 +263,5 @@ HAL_StatusTypeDef can2_send_msg(uint32_t id, uint8_t type, uint8_t len, uint8_t 
   return HAL_OK;
 }
 
-HAL_StatusTypeDef can2_receive_msg(uint32_t id, uint8_t FIFO_id, uint8_t type, uint8_t *buf)
-{
-  CAN_RxHeaderTypeDef g_can2_rxheader;                  /* 接收参数句柄 */
-  if (HAL_CAN_GetRxFifoFillLevel(&hcan2, FIFO_id) == 0) /* 没有接收到数据 */
-  {
-    return HAL_ERROR;
-  }
-  if (HAL_CAN_GetRxMessage(&hcan2, FIFO_id, &g_can2_rxheader, buf) != HAL_OK) /* 读取数据 */
-  {
-    return HAL_ERROR;
-  }
-  if (g_can2_rxheader.StdId != id || g_can2_rxheader.IDE != CAN_ID_STD || g_can2_rxheader.RTR != type) /* 接收到的ID不对 / 不是标准帧 / 不是type类型 （软件筛选）*/
-  {
-    return HAL_ERROR;
-  }
-  return g_can2_rxheader.DLC;
-}
-
-HAL_StatusTypeDef setCANxFilter(CAN_HandleTypeDef hcan, CAN_FilterTypeDef *userFilter)
-{
-  CAN_FilterTypeDef sFilterConfig;
-  sFilterConfig.FilterBank = userFilter->FilterBank; /* 过滤器ID */
-  sFilterConfig.FilterMode = userFilter->FilterMode;
-  sFilterConfig.FilterScale = userFilter->FilterScale;
-  sFilterConfig.FilterIdHigh = userFilter->FilterIdHigh; /* 32位ID */
-  sFilterConfig.FilterIdLow = userFilter->FilterIdLow;
-  sFilterConfig.FilterMaskIdHigh = userFilter->FilterMaskIdHigh; /* 32位MASK */
-  sFilterConfig.FilterMaskIdLow = userFilter->FilterMaskIdLow;
-  sFilterConfig.FilterFIFOAssignment = userFilter->FilterFIFOAssignment; /* 过滤器关联到FIFO0 */
-  sFilterConfig.FilterActivation = userFilter->FilterActivation;         /* 激活滤波器 */
-#ifndef IS_SET_SALVE_START_FILTER_BANK
-#define IS_SET_SALVE_START_FILTER_BANK
-  sFilterConfig.SlaveStartFilterBank = 0; /* 从0开始的从属滤波器 */
-#endif
-  if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK)
-  {
-    return HAL_ERROR;
-  }
-  return HAL_OK;
-}
-
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-}
-
-void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-}
 
 /* USER CODE END 1 */
