@@ -1,7 +1,6 @@
 #pragma once
 #include "main.h"
 #include "tim.h"
-#include "dc_motor.h"
 
 // PID参数结构体 (使用定点数，放大1000倍)
 typedef struct
@@ -29,7 +28,6 @@ typedef struct
 typedef struct
 {
     PID_TypeDef pid;
-    DC_Monitor_TypeDef *motor;
 
     int32_t (*feedback_function)(void); // 反馈读取函数指针
     void (*output_function)(int32_t);   // 输出控制函数指针
@@ -39,35 +37,31 @@ typedef struct
     // 统计信息
     uint32_t control_count; // 控制次数计数
     int32_t max_error;      // 最大误差记录
-    uint8_t controller_id;  // 控制器ID
 } PID_Controller_TypeDef;
 
 // PID系统管理结构体
 typedef struct
 {
-    PID_Controller_TypeDef controllers[4]; // 最多支持4个PID控制器
-    uint8_t controller_count;
-    TIM_HandleTypeDef *system_timer; // 系统定时器
-    uint8_t system_enable;           // 系统使能
+    PID_Controller_TypeDef controller; // 单个PID控制器
+    TIM_HandleTypeDef *system_timer;   // 系统定时器
+    uint8_t system_enable;             // 系统使能
 } PID_System_TypeDef;
 
 // 函数声明
 void PID_System_Init(TIM_HandleTypeDef *htim);
-uint8_t PID_Controller_Create(DC_Monitor_TypeDef *motor,
-                              int32_t kp, int32_t ki, int32_t kd,
-                              uint32_t sample_time_ms);
-void PID_Controller_SetParams(uint8_t controller_id, int32_t kp, int32_t ki, int32_t kd);
-void PID_Controller_SetLimits(uint8_t controller_id, int32_t max_output, int32_t min_output, int32_t max_integral);
-void PID_Controller_SetTarget(uint8_t controller_id, int32_t target);
-void PID_Controller_Enable(uint8_t controller_id, uint8_t enable);
+void PID_Controller_Create(int32_t (*feedback_func)(void), void (*output_func)(int32_t),
+                           int32_t kp, int32_t ki, int32_t kd,
+                           uint32_t sample_time_ms);
+void PID_Controller_SetParams(int32_t kp, int32_t ki, int32_t kd);
+void PID_Controller_SetLimits(int32_t max_output, int32_t min_output, int32_t max_integral);
+void PID_Controller_SetTarget(int32_t target);
+void PID_Controller_Enable(uint8_t enable);
 
 // 内部函数
 void PID_Calculate(PID_Controller_TypeDef *controller);
-int32_t PID_Get_Motor_Speed(DC_Monitor_TypeDef *motor);
-void PID_Set_Motor_Speed(DC_Monitor_TypeDef *motor, int32_t speed);
 void PID_System_Timer_Callback(void);
 
 // 调试和监控函数
-void PID_Print_Status(uint8_t controller_id);
-int32_t PID_Get_Error(uint8_t controller_id);
-int32_t PID_Get_Output(uint8_t controller_id);
+void PID_Print_Status(void);
+int32_t PID_Get_Error(void);
+int32_t PID_Get_Output(void);

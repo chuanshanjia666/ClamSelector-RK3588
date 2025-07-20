@@ -16,7 +16,6 @@ void PID_System_Init(TIM_HandleTypeDef *htim)
 {
     memset(&g_pid_system, 0, sizeof(PID_System_TypeDef));
     g_pid_system.system_timer = htim;
-    g_pid_system.controller_count = 0;
     g_pid_system.system_enable = 1;
 
     // 启动定时器中断，定时器周期就是PID采样周期
@@ -26,26 +25,19 @@ void PID_System_Init(TIM_HandleTypeDef *htim)
 }
 
 /**
- * @brief 创建一个PID控制器
- * @param motor 关联的电机句柄
+ * @brief 创建PID控制器
+ * @param feedback_func 反馈读取函数指针
+ * @param output_func 输出控制函数指针
  * @param kp 比例系数 (已放大1000倍)
  * @param ki 积分系数 (已放大1000倍)
  * @param kd 微分系数 (已放大1000倍)
  * @param sample_time_ms 采样周期(ms) - 仅供参考，实际由定时器控制
- * @return 控制器ID，255表示失败
  */
-uint8_t PID_Controller_Create(DC_Monitor_TypeDef *motor,
-                              int32_t kp, int32_t ki, int32_t kd,
-                              uint32_t sample_time_ms)
+void PID_Controller_Create(int32_t (*feedback_func)(void), void (*output_func)(int32_t),
+                           int32_t kp, int32_t ki, int32_t kd,
+                           uint32_t sample_time_ms)
 {
-    if (g_pid_system.controller_count >= 4)
-    {
-        printf("PID Controller limit reached!\r\n");
-        return 255;
-    }
-
-    uint8_t id = g_pid_system.controller_count;
-    PID_Controller_TypeDef *controller = &g_pid_system.controllers[id];
+    PID_Controller_TypeDef *controller = &g_pid_system.controller;
 
     // 初始化PID参数
     controller->pid.kp = kp;
@@ -64,34 +56,26 @@ uint8_t PID_Controller_Create(DC_Monitor_TypeDef *motor,
     controller->pid.max_integral = 1000000; // 积分限幅 (1000.0 * 1000)
     controller->pid.enable = 0;             // 默认禁用
 
-    // 关联电机和设置参数
-    controller->motor = motor;
+    // 设置函数指针
+    controller->feedback_function = feedback_func;
+    controller->output_function = output_func;
     controller->sample_time_ms = sample_time_ms;
     controller->control_count = 0;
     controller->max_error = 0;
-    controller->controller_id = id;
 
-    g_pid_system.controller_count++;
-
-    printf("PID Controller %d created: Kp=%ld, Ki=%ld, Kd=%ld (x1000)\r\n",
-           id, kp, ki, kd);
-
-    return id;
+    printf("PID Controller created: Kp=%ld, Ki=%ld, Kd=%ld (x1000)\r\n",
+           kp, ki, kd);
 }
 
 /**
  * @brief 设置PID参数
- * @param controller_id 控制器ID
  * @param kp 比例系数 (已放大1000倍)
  * @param ki 积分系数 (已放大1000倍)
  * @param kd 微分系数 (已放大1000倍)
  */
-void PID_Controller_SetParams(uint8_t controller_id, int32_t kp, int32_t ki, int32_t kd)
+void PID_Controller_SetParams(int32_t kp, int32_t ki, int32_t kd)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return;
-
-    PID_TypeDef *pid = &g_pid_system.controllers[controller_id].pid;
+    PID_TypeDef *pid = &g_pid_system.controller.pid;
     pid->kp = kp;
     pid->ki = ki;
     pid->kd = kd;
@@ -103,17 +87,13 @@ void PID_Controller_SetParams(uint8_t controller_id, int32_t kp, int32_t ki, int
 
 /**
  * @brief 设置输出限制
- * @param controller_id 控制器ID
  * @param max_output 最大输出
  * @param min_output 最小输出
  * @param max_integral 积分限幅
  */
-void PID_Controller_SetLimits(uint8_t controller_id, int32_t max_output, int32_t min_output, int32_t max_integral)
+void PID_Controller_SetLimits(int32_t max_output, int32_t min_output, int32_t max_integral)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return;
-
-    PID_TypeDef *pid = &g_pid_system.controllers[controller_id].pid;
+    PID_TypeDef *pid = &g_pid_system.controller.pid;
     pid->max_output = max_output;
     pid->min_output = min_output;
     pid->max_integral = max_integral;
@@ -121,28 +101,20 @@ void PID_Controller_SetLimits(uint8_t controller_id, int32_t max_output, int32_t
 
 /**
  * @brief 设置目标值
- * @param controller_id 控制器ID
  * @param target 目标值
  */
-void PID_Controller_SetTarget(uint8_t controller_id, int32_t target)
+void PID_Controller_SetTarget(int32_t target)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return;
-
-    g_pid_system.controllers[controller_id].pid.setpoint = target;
+    g_pid_system.controller.pid.setpoint = target;
 }
 
 /**
  * @brief 使能/禁用控制器
- * @param controller_id 控制器ID
  * @param enable 1=使能，0=禁用
  */
-void PID_Controller_Enable(uint8_t controller_id, uint8_t enable)
+void PID_Controller_Enable(uint8_t enable)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return;
-
-    PID_Controller_TypeDef *controller = &g_pid_system.controllers[controller_id];
+    PID_Controller_TypeDef *controller = &g_pid_system.controller;
     controller->pid.enable = enable;
 
     if (enable)
@@ -150,13 +122,16 @@ void PID_Controller_Enable(uint8_t controller_id, uint8_t enable)
         // 使能时重置状态
         controller->pid.integral = 0;
         controller->pid.last_error = 0;
-        printf("PID Controller %d Enabled\r\n", controller_id);
+        printf("PID Controller Enabled\r\n");
     }
     else
     {
-        // 禁用时停止电机
-        DC_Motor_SetSpeed(controller->motor, 0);
-        printf("PID Controller %d Disabled\r\n", controller_id);
+        // 禁用时停止输出
+        if (controller->output_function)
+        {
+            controller->output_function(0);
+        }
+        printf("PID Controller Disabled\r\n");
     }
 }
 
@@ -169,9 +144,11 @@ void PID_Calculate(PID_Controller_TypeDef *controller)
     if (!controller->pid.enable)
         return;
 
-    // 读取反馈值（编码器计数转换为速度）
-    DC_Motor_GetEncodeNum(controller->motor);
-    controller->pid.feedback = PID_Get_Motor_Speed(controller->motor);
+    // 通过函数指针读取反馈值
+    if (controller->feedback_function)
+    {
+        controller->pid.feedback = controller->feedback_function();
+    }
 
     // 计算误差
     int32_t error = controller->pid.setpoint - controller->pid.feedback;
@@ -208,13 +185,11 @@ void PID_Calculate(PID_Controller_TypeDef *controller)
         controller->pid.output = controller->pid.min_output;
     }
 
-    // 设置电机速度 (转换回实际范围)
-    int32_t motor_speed = controller->pid.output / PID_SCALE_FACTOR;
-    if (motor_speed > 100)
-        motor_speed = 100;
-    if (motor_speed < 0)
-        motor_speed = 0;
-    DC_Motor_SetSpeed(controller->motor, (uint16_t)motor_speed);
+    // 通过函数指针设置输出
+    if (controller->output_function)
+    {
+        controller->output_function(controller->pid.output);
+    }
 
     // 更新状态
     controller->pid.last_error = error;
@@ -229,32 +204,6 @@ void PID_Calculate(PID_Controller_TypeDef *controller)
 }
 
 /**
- * @brief 获取电机速度（从编码器）
- * @param motor 电机句柄
- * @return 速度值 (定点数)
- */
-int32_t PID_Get_Motor_Speed(DC_Monitor_TypeDef *motor)
-{
-    // 这里可以根据编码器计数计算实际速度
-    // 简化处理：直接返回编码器计数差值
-    // 实际应用中需要根据编码器分辨率和采样时间计算RPM
-    static uint16_t last_count = 0;
-    uint16_t current_count = motor->encode_num;
-
-    int16_t speed_raw = current_count - last_count;
-    last_count = current_count;
-
-    // 处理定时器溢出情况
-    if (speed_raw > 32767)
-        speed_raw -= 65536;
-    if (speed_raw < -32768)
-        speed_raw += 65536;
-
-    // 放大到定点数范围 (可根据需要调整缩放)
-    return (int32_t)speed_raw * PID_SCALE_FACTOR;
-}
-
-/**
  * @brief 定时器中断回调函数
  * 这个函数应该在定时器中断处理函数中被调用
  * 定时器周期就是PID采样周期，无需额外时间检查
@@ -264,26 +213,19 @@ void PID_System_Timer_Callback(void)
     if (!g_pid_system.system_enable)
         return;
 
-    // 依次处理所有使能的PID控制器
-    for (uint8_t i = 0; i < g_pid_system.controller_count; i++)
-    {
-        PID_Calculate(&g_pid_system.controllers[i]);
-    }
+    // 处理单个PID控制器
+    PID_Calculate(&g_pid_system.controller);
 }
 
 /**
  * @brief 打印PID状态信息
- * @param controller_id 控制器ID
  */
-void PID_Print_Status(uint8_t controller_id)
+void PID_Print_Status(void)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return;
-
-    PID_Controller_TypeDef *controller = &g_pid_system.controllers[controller_id];
+    PID_Controller_TypeDef *controller = &g_pid_system.controller;
     PID_TypeDef *pid = &controller->pid;
 
-    printf("=== PID Controller %d Status ===\r\n", controller_id);
+    printf("=== PID Controller Status ===\r\n");
     printf("Enable: %s\r\n", pid->enable ? "YES" : "NO");
     printf("Setpoint: %ld\r\n", pid->setpoint);
     printf("Feedback: %ld\r\n", pid->feedback);
@@ -298,27 +240,38 @@ void PID_Print_Status(uint8_t controller_id)
 
 /**
  * @brief 获取当前误差
- * @param controller_id 控制器ID
  * @return 当前误差值
  */
-int32_t PID_Get_Error(uint8_t controller_id)
+int32_t PID_Get_Error(void)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return 0;
-
-    PID_TypeDef *pid = &g_pid_system.controllers[controller_id].pid;
+    PID_TypeDef *pid = &g_pid_system.controller.pid;
     return pid->setpoint - pid->feedback;
 }
 
 /**
  * @brief 获取当前输出
- * @param controller_id 控制器ID
  * @return 当前输出值
  */
-int32_t PID_Get_Output(uint8_t controller_id)
+int32_t PID_Get_Output(void)
 {
-    if (controller_id >= g_pid_system.controller_count)
-        return 0;
+    return g_pid_system.controller.pid.output;
+}
 
-    return g_pid_system.controllers[controller_id].pid.output;
+/**
+ * @brief 获取当前误差
+ * @return 当前误差值
+ */
+int32_t PID_Get_Error(void)
+{
+    PID_TypeDef *pid = &g_pid_system.controller.pid;
+    return pid->setpoint - pid->feedback;
+}
+
+/**
+ * @brief 获取当前输出
+ * @return 当前输出值
+ */
+int32_t PID_Get_Output(void)
+{
+    return g_pid_system.controller.pid.output;
 }

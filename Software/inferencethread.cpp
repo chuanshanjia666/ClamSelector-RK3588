@@ -101,9 +101,9 @@ void InferenceThread::run()
         if (success && !output.empty())
         {
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-            qDebug().nospace() << "[Inference] " << frame->width << "x" << frame->height
-                               << " fmt:" << frame->format
-                               << " time:" << duration.count() << "ms";
+            // qDebug().nospace() << "[Inference] " << frame->width << "x" << frame->height
+            //                    << " fmt:" << frame->format
+            //                    << " time:" << duration.count() << "ms";
 
             // 找到最大置信度和对应类别
             auto maxIter = std::max_element(output.begin(), output.end());

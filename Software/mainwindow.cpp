@@ -3,7 +3,7 @@
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), m_decodeThread(new DecodeThread(this)), m_inferenceThread(new InferenceThread(this)),m_serialWorker(new SerialWorker("/dev/ttyS9", 9600, this))
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_decodeThread(new DecodeThread(this)), m_inferenceThread(new InferenceThread(this)),m_serialWorker(new SerialWorker("/dev/ttyS9", 115200, this))
 {
     ui->setupUi(this);
 
@@ -33,8 +33,8 @@ void MainWindow::onStartStopClicked()
     {
         // 开始解码
         ui->start_stop_button->setText("停止");
-        m_decodeThread->startDecode("rtsp://admin618@192.168.137.160:8554/video"); // 替换为你的视频文件路径
-        // m_decodeThread->startDecode("test.mp4"); // 替换为你的视频文件路径
+        // m_decodeThread->startDecode("rtsp://admin618@192.168.137.160:8554/video"); // 替换为你的视频文件路径
+        m_decodeThread->startDecode("test.mp4"); // 替换为你的视频文件路径
         // m_decodeThread->startDecode("/dev/video22"); // 替换为你的视频文件路径
         m_isDecoding = true;
         m_inferenceThread->start();
@@ -73,11 +73,12 @@ void MainWindow::handleInferenceResult(int classId, float confidence)
     if (m_classQueue.size() > 10)
     {
         int removedClassId = m_classQueue.dequeue(); // 出队
-        qDebug() << "[Queue] Removed class ID:" << removedClassId;
+        // qDebug() << "[Queue] Removed class ID:" << removedClassId;
     }
     ui->label_4->setText(QString("种类: %1").arg(classId));               // 显示类别
     ui->confidence_label->setText(QString("置信度: %1").arg(confidence)); // 显示置信度
 }
+
 void MainWindow::onSerialStartReceived()
 {
     if (m_classQueue.isEmpty())

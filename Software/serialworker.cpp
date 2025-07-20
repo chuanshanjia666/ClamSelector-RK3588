@@ -24,6 +24,7 @@ void SerialWorker::sendClassResponse(int classId)
 
     QString msg = QString("class%1\n").arg(classId);
     QByteArray ascii = msg.toLatin1(); // 保证是 ASCII 格式
+    qDebug() << "[Sending data]:" << ascii;
     m_serial.writeData(ascii.constData(), ascii.length());
 }
 
@@ -39,12 +40,12 @@ void SerialWorker::run()
         {
             buffer[n] = '\0';
             recvBuffer.append(buffer, n);
-
-            if (recvBuffer.contains("start\n"))
+            qDebug() << "[Received data]:" << recvBuffer;
+            if (recvBuffer.contains("start "))
             {
                 emit startCommandReceived();
-                recvBuffer.clear();
             }
+            recvBuffer.clear();
         }
 
         msleep(10);

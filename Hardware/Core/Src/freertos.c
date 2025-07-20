@@ -32,7 +32,7 @@
 #include "can.h"
 #include "step_motor.h"
 #include "myqueue.h"
-#include "botton_system.h"
+#include "button_system.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -271,7 +271,7 @@ void MainTask(void *argument)
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, buff, sizeof(buff));
   osDelay(1);
-  StepMotor_Init(&hcan2);
+  StepMotor_Init(&hcan1);
   
   Button_System_Init(&htim13);
   Button_System_Add(BUTTON_TEST_GPIO_Port, BUTTON_TEST_Pin, GPIO_PIN_RESET, PushCallBack, ReleaseCallBack);

@@ -228,7 +228,7 @@ AVRational HWDecoder::getTimeBase() const
     return format_ctx_ ? format_ctx_->streams[video_stream_index_]->time_base : AVRational{1, 1};
 }
 
-AVBufferRef *HWDecoder::get_hwdevice_ctx()
+AVBufferRef *HWDecoder::get_hwdevice_cxt()
 {
     return hw_device_ctx_;
 }

@@ -14,7 +14,7 @@ public:
     void printDecoderInfo() override;
     AVRational getTimeBase() const override;
 
-    AVBufferRef *get_hwdevice_ctx();
+    AVBufferRef *get_hwdevice_cxt();
 
 private:
     AVFormatContext *format_ctx_;
