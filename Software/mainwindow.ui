@@ -17,7 +17,7 @@
    <string notr="true">background-image: url(:/image/background.jpg);
             background-repeat: no-repeat;
             background-attachment: fixed;
-            /* background-size: cover; 移除不被Qt支持的属性 */</string>
+    </string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -66,6 +66,12 @@
        <layout class="QVBoxLayout" name="right_layout">
         <item>
          <widget class="QLabel" name="label_4">
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
            <string>种类：</string>
           </property>
@@ -73,6 +79,12 @@
         </item>
         <item>
          <widget class="QLabel" name="confidence_label">
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
            <string>置信度：</string>
           </property>
@@ -98,6 +110,12 @@
           <height>150</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>32</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="text">
          <string>开始</string>
         </property>
@@ -117,6 +135,12 @@
           <height>150</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>32</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="text">
          <string>人工介入</string>
         </property>
@@ -124,21 +148,20 @@
       </item>
      </layout>
     </item>
-
    </layout>
- </widget>
-     <widget class="QMenuBar" name="menubar">
-        <property name="geometry">
-            <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>800</width>
-            <height>22</height>
-            </rect>
-        </property>
-    </widget>
-    <widget class="QStatusBar" name="statusbar"/>
   </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>818</width>
+     <height>18</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
  <resources/>
  <connections/>
 </ui>

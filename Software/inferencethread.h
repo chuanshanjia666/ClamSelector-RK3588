@@ -39,5 +39,6 @@ private:
     bool m_running = true;
     RKNNModelLoader m_modelLoader;
 
-    void freeQueue(); // 清理队列中的AVFrame
+    void freeQueue();                                             // 清理队列中的AVFrame
+    std::vector<float> softmax(const std::vector<float> &logits); // 添加 softmax 函数声明
 };

@@ -75,8 +75,8 @@ void StepMotor_Init(CAN_HandleTypeDef *hcanx)
     StepMotor_id_2.mode = STEPMOTOR_POSITION_MODE;
     StepMotor_id_2.dir = STEPMOTOR_DIRECTION_CW;
     StepMotor_id_2.seg = STEPMOTOR_SEGMENT_32; // 32 segments
-    StepMotor_id_2.pos_h = 0x0e;               // Initial position high byte
-    StepMotor_id_2.pos_l = 0x10;               // Initial position low byte
+    StepMotor_id_2.pos_h = 0x03;               // Initial position high byte
+    StepMotor_id_2.pos_l = 0x84;               // Initial position low byte
     StepMotor_id_2.speed_h = 0x00;             // Initial speed high byte
     StepMotor_id_2.speed_l = 0x64;             // Initial speed low byte
 
@@ -84,8 +84,8 @@ void StepMotor_Init(CAN_HandleTypeDef *hcanx)
     StepMotor_id_3.mode = STEPMOTOR_POSITION_MODE;
     StepMotor_id_3.dir = STEPMOTOR_DIRECTION_CW;
     StepMotor_id_3.seg = STEPMOTOR_SEGMENT_32; // 32
-    StepMotor_id_3.pos_h = 0x07;               // Initial position high byte
-    StepMotor_id_3.pos_l = 0x08;               // Initial position low byte
+    StepMotor_id_3.pos_h = 0x03;               // Initial position high byte
+    StepMotor_id_3.pos_l = 0x84;               // Initial position low byte
     StepMotor_id_3.speed_h = 0x00;             // Initial speed high byte
     StepMotor_id_3.speed_l = 0x64;             // Initial speed low byte
 
