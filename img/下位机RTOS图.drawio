@@ -1,0 +1,126 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Title -->
+    <mxCell id="title" value="下位机RTOS图" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="200" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== Top-left: 定时器标记位 ===== -->
+    <mxCell id="timer_flag" value="定时器标记位" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 串口空闲中断 ===== -->
+    <mxCell id="uart_irq" value="串口空闲中断" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="260" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 上位机输入 ===== -->
+    <mxCell id="host_input" value="上位机输入" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="350" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 定时器句柄队列 ===== -->
+    <mxCell id="timer_queue" value="定时器句柄队列" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="280" y="70" width="150" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 步进电机线程 ===== -->
+    <mxCell id="stepper_thread" value="步进电机线程" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="530" y="70" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 主线程 ===== -->
+    <mxCell id="main_thread" value="主线程" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="310" y="170" width="130" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 软定时器 ===== -->
+    <mxCell id="soft_timer" value="软定时器" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="540" y="170" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 标记位 ===== -->
+    <mxCell id="flag" value="标记位" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="310" y="270" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 硬件定时器 ===== -->
+    <mxCell id="hw_timer" value="硬件定时器" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="540" y="270" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 滤波系统 ===== -->
+    <mxCell id="filter" value="滤波系统" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="310" y="360" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 直流电机PID控制 ===== -->
+    <mxCell id="pid_ctrl" value="直流电机PID控制" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="540" y="360" width="140" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 按钮输入 ===== -->
+    <mxCell id="btn_input" value="按钮输入" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="310" y="450" width="130" height="35" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== Arrows ===== -->
+    <!-- 串口空闲中断 -> 定时器标记位 (修改) -->
+    <mxCell id="a1" value="修改" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="uart_irq" target="timer_flag">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 上位机输入 -> 串口空闲中断 -->
+    <mxCell id="a2" style="endArrow=classic;html=1;" edge="1" parent="1" source="host_input" target="uart_irq">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 定时器标记位 -> 主线程 (查看) -->
+    <mxCell id="a3" value="查看" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="timer_flag" target="main_thread">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 主线程 -> 定时器句柄队列 (更新) -->
+    <mxCell id="a4" value="更新" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="main_thread" target="timer_queue">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 步进电机线程 -> 定时器句柄队列 (获取句柄) -->
+    <mxCell id="a5" value="获取句柄" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="stepper_thread" target="timer_queue">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 主线程 -> 软定时器 (创建) -->
+    <mxCell id="a6" value="创建" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="main_thread" target="soft_timer">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 软定时器 -> 步进电机线程 (通知) -->
+    <mxCell id="a7" value="通知" style="endArrow=classic;html=1;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="soft_timer" target="stepper_thread">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 软定时器 -> 步进电机线程 (删除) -->
+    <mxCell id="a8" value="删除" style="endArrow=classic;html=1;fontSize=10;exitX=0.75;exitY=0;entryX=0.75;entryY=1;" edge="1" parent="1" source="soft_timer" target="stepper_thread">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 主线程 -> 标记位 (读取) -->
+    <mxCell id="a9" value="读取" style="endArrow=classic;html=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="main_thread" target="flag">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 标记位 -> 主线程 (响应) -->
+    <mxCell id="a10" value="响应" style="endArrow=classic;html=1;fontSize=10;exitX=0.75;exitY=0;entryX=0.75;entryY=1;" edge="1" parent="1" source="flag" target="main_thread">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 滤波系统 -> 标记位 (修改) -->
+    <mxCell id="a11" value="修改" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="filter" target="flag">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 按钮输入 -> 滤波系统 -->
+    <mxCell id="a12" style="endArrow=classic;html=1;" edge="1" parent="1" source="btn_input" target="filter">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- 硬件定时器 -> 直流电机PID控制 (定时中断) -->
+    <mxCell id="a13" value="定时中断" style="endArrow=classic;html=1;fontSize=10;" edge="1" parent="1" source="hw_timer" target="pid_ctrl">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
